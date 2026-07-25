@@ -123,7 +123,7 @@ describe("PokemonRepository") {
 Add the package to your `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/PBlanes/PauDependencies.git", from: "1.0.0")
+.package(url: "https://github.com/BlanesP/PauDependencies.git", from: "1.0.0")
 ```
 
 Then add the products you need:
@@ -142,7 +142,7 @@ Quick support is behind a package **trait**, so `Quick` is only pulled in if you
 Enable the `QuickTrait` trait on the dependency, and add the product to your test target:
 
 ```swift
-.package(url: "https://github.com/PBlanes/PauDependencies.git", from: "1.0.0", traits: ["QuickTrait"])
+.package(url: "https://github.com/BlanesP/PauDependencies.git", from: "1.0.0", traits: ["QuickTrait"])
 ```
 
 ```swift
