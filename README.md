@@ -44,11 +44,11 @@ extension DependencyValues {
 Read it anywhere with `@Dependency`. Resolution is lazy, so overrides are always reflected:
 
 ```swift
-struct PokemonRepository {
+struct Feature {
     @Dependency(\.apiClient) var apiClient
 
-    func fetch(id: Int) async throws -> Pokemon {
-        try await apiClient.fetch(id)
+    func load() async throws -> Data {
+        try await apiClient.fetch()
     }
 }
 ```
@@ -58,10 +58,10 @@ struct PokemonRepository {
 Override for the duration of a scope — the previous values are restored automatically:
 
 ```swift
-let pokemon = try await DependencyValues.dependencies {
+let data = try await DependencyValues.dependencies {
     $0.apiClient = .mock
 } inScope: {
-    try await MyRepository.fetch(id: 1)
+    try await Feature().load()
 }
 ```
 
@@ -96,10 +96,10 @@ Use the `.dependencies` trait on a test or a whole suite:
 import PauDependenciesTestSupport
 
 @Test(.dependencies { $0.apiClient = .mock })
-func loadsPokemon() async throws { ... }
+func loadsData() async throws { ... }
 
 @Suite(.dependencies { $0.apiClient = .mock })
-struct RepositoryTests { ... }
+struct FeatureTests { ... }
 ```
 
 ### Quick
@@ -109,10 +109,10 @@ Override for every example in a group, or for a single example:
 ```swift
 import PauDependenciesQuickSupport
 
-describe("PokemonRepository") {
+describe("Feature") {
     dependenciesAroundEach { $0.apiClient = .mock }
 
-    it("loads a pokemon") { ... }
+    it("loads data") { ... }
 
     it("handles an error", dependencies: { $0.apiClient = .failing }) { ... }
 }
