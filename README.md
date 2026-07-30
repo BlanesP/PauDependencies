@@ -39,6 +39,25 @@ extension DependencyValues {
 }
 ```
 
+### With the `@DependencyEntry` macro
+
+The `@DependencyEntry` macro removes the boilerplate. Applied to a property on `DependencyValues`,
+it generates both the key (with its `liveValue`) and the get/set accessors for you:
+
+```swift
+import PauDependenciesMacros
+
+extension DependencyValues {
+    @DependencyEntry var apiClient: APIClient = APIClient()
+}
+```
+
+This expands to exactly the key and computed property shown above. The property **must** have an
+explicit type and a default value — the default becomes the key's `liveValue`.
+
+The macro is behind a package **trait**, so `swift-syntax` is only pulled in if you ask for it. See
+[Macro support](#macro-support-optional) below to enable it.
+
 ## Using a dependency
 
 Read it anywhere with `@Dependency`. Resolution is lazy, so overrides are always reflected:
@@ -123,7 +142,7 @@ describe("Feature") {
 Add the package to your `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/BlanesP/PauDependencies.git", from: "1.0.0")
+.package(url: "https://github.com/BlanesP/PauDependencies.git", from: "1.1.0")
 ```
 
 Then add the products you need:
@@ -142,7 +161,7 @@ Quick support is behind a package **trait**, so `Quick` is only pulled in if you
 Enable the `QuickTrait` trait on the dependency, and add the product to your test target:
 
 ```swift
-.package(url: "https://github.com/BlanesP/PauDependencies.git", from: "1.0.0", traits: ["QuickTrait"])
+.package(url: "https://github.com/BlanesP/PauDependencies.git", from: "1.1.0", traits: ["QuickTrait"])
 ```
 
 ```swift
@@ -151,6 +170,22 @@ Enable the `QuickTrait` trait on the dependency, and add the product to your tes
 ```
 
 > Consumers who don't enable `QuickTrait` never resolve or link Quick.
+
+### Macro support (optional)
+
+The `@DependencyEntry` macro is behind the `SwiftSyntaxTrait` trait, so `swift-syntax` is only
+pulled in if you ask for it. Enable the trait on the dependency, and add the product to your target:
+
+```swift
+.package(url: "https://github.com/BlanesP/PauDependencies.git", from: "1.1.0", traits: ["SwiftSyntaxTrait"])
+```
+
+```swift
+// app / library target
+.product(name: "PauDependenciesMacros", package: "PauDependencies")
+```
+
+> Consumers who don't enable `SwiftSyntaxTrait` never resolve or link `swift-syntax`.
 
 ## Requirements
 

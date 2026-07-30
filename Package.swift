@@ -2,6 +2,7 @@
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
+import CompilerPluginSupport
 
 let package = Package(
     name: "PauDependencies",
@@ -15,17 +16,29 @@ let package = Package(
             name: "PauDependencies",
             targets: ["PauDependencies"]
         ),
-        .library(name: "PauDependenciesTestSupport", targets: ["PauDependenciesTestSupport"]),
-        .library(name: "PauDependenciesQuickSupport", targets: ["PauDependenciesQuickSupport"])
+        .library(
+            name: "PauDependenciesMacros",
+            targets: ["PauDependenciesMacros"]
+        ),
+        .library(
+            name: "PauDependenciesTestSupport",
+            targets: ["PauDependenciesTestSupport"]
+        ),
+        .library(
+            name: "PauDependenciesQuickSupport",
+            targets: ["PauDependenciesQuickSupport"]
+        )
     ],
     traits: [
         .trait(name: "QuickTrait", enabledTraits: []),
-        .default(enabledTraits: [])          // QuickTrait is opt-in (off by default)
+        .trait(name: "SwiftSyntaxTrait", enabledTraits: []),
+        .default(enabledTraits: [])
     ],
     dependencies: [
         .package(url: "https://github.com/Quick/Quick", .upToNextMajor(from: "7.0.0")),
         .package(url: "https://github.com/Quick/Nimble", .upToNextMajor(from: "13.0.0")),
-        .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "1.5.0")
+        .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "1.5.0"),
+        .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "603.0.0")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -45,6 +58,20 @@ let package = Package(
             dependencies: [
                 "PauDependencies",
                 .product(name: "Quick", package: "Quick", condition: .when(traits: ["QuickTrait"]))
+            ]
+        ),
+        .target(
+            name: "PauDependenciesMacros",
+            dependencies: [
+                .target(name: "PauDependenciesMacrosPlugin",
+                        condition: .when(traits: ["SwiftSyntaxTrait"]))
+            ]
+        ),
+        .macro(
+            name: "PauDependenciesMacrosPlugin",
+            dependencies: [
+                .product(name: "SwiftSyntaxMacros", package: "swift-syntax", condition: .when(traits: ["SwiftSyntaxTrait"])),
+                .product(name: "SwiftCompilerPlugin", package: "swift-syntax", condition: .when(traits: ["SwiftSyntaxTrait"])),
             ]
         ),
         .testTarget(

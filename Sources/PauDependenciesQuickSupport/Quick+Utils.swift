@@ -29,7 +29,9 @@ extension SyncDSLUser {
     ) {
         it(description, file: file, line: line) {
             try DependencyValues.dependencies(mutate) {
-                try closure()
+                try MainActor.assumeIsolated {
+                    try closure()
+                }
             }
         }
     }
