@@ -29,7 +29,7 @@ public struct DependencyValues: Sendable {
 
     /// Resolves the value for the given key: the override if one is set, otherwise the
     /// default for the current ``context``.
-    public subscript<Key>(key: Key.Type) -> Key.Value where Key: DependencyKey {
+    public subscript<Key>(key: Key.Type) -> Key.Value where Key: DependencyDeclarationKey {
         get {
             if let override = overrides[ObjectIdentifier(key)] as? Key.Value {
                 return override
@@ -37,13 +37,13 @@ public struct DependencyValues: Sendable {
 
             switch context ?? Self.detectedContext {
             case .live:
-                return key.liveValue
+                return liveValue(for: key) ?? key.declarationValue
 
             case .test:
                 if !allowsLiveValuesDuringTesting {
                     reportIssue("Using liveValue ('\(key)') in a test is forbidden. Override it or set allowsLiveValuesDuringTesting.")
                 }
-                return key.liveValue
+                return liveValue(for: key) ?? key.declarationValue
 
             case .preview:
                 return key.previewValue
@@ -77,8 +77,8 @@ public struct DependencyValues: Sendable {
 
     // MARK: - Private
 
-    // Best-effort detection of the running environment. Computed once per process,
-    // since the environment can't change during a run.
+    /// Best-effort detection of the running environment. Computed once per process,
+    /// since the environment can't change during a run.
     private static let detectedContext: DependencyContext = {
         if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
             return .preview
@@ -89,4 +89,28 @@ public struct DependencyValues: Sendable {
         }
         return .live
     }()
+    
+    /// Resolves the linked live value for `key`, if any.
+    ///
+    /// A key statically only guarantees ``DependencyDeclarationKey``; its ``DependencyKey/liveValue``
+    /// may be supplied by another module that conforms the same key to ``DependencyKey`` — possibly
+    /// retroactively — so it can't be reached through the static type. This performs a runtime check
+    /// for that conformance and, when present, returns the linked `liveValue`.
+    ///
+    /// The cast is required rather than simply reading ``DependencyDeclarationKey/declarationValue``:
+    /// a split key defines `declarationValue` explicitly in its interface, which *shadows* the
+    /// ``DependencyKey`` default that would otherwise forward to `liveValue`. So for such keys
+    /// `declarationValue` keeps returning its placeholder even when a live implementation is linked —
+    /// only this cast reaches the real value.
+    ///
+    /// - Returns: the linked ``DependencyKey/liveValue``, or `nil` (after reporting an issue) when no
+    ///   ``DependencyKey`` conformance is linked, so the caller can fall back to `declarationValue`.
+    private func liveValue<Key: DependencyDeclarationKey>(for key: Key.Type) -> Key.Value? {
+        guard let liveKey = key as? any DependencyKey.Type else {
+            reportIssue("No live implementation linked for \(key); using declarationValue.")
+            return nil
+        }
+
+        return liveKey.liveValue as? Key.Value
+    }
 }

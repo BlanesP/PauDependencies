@@ -13,4 +13,10 @@ import Foundation
 public macro DependencyEntry() = #externalMacro(
     module: "PauDependenciesMacrosPlugin", type: "DependencyEntryMacro"
 )
+
+@attached(peer, names: arbitrary)
+@attached(accessor)
+public macro DependencyDeclaration() = #externalMacro(
+    module: "PauDependenciesMacrosPlugin", type: "DependencyDeclarationMacro"
+)
 #endif

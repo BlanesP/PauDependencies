@@ -12,7 +12,8 @@ import SwiftSyntaxMacros
 @main
 struct MacrosPlugin: CompilerPlugin {
     let providingMacros: [Macro.Type] = [
-        DependencyEntryMacro.self
+        DependencyEntryMacro.self,
+        DependencyDeclarationMacro.self
     ]
 }
 #endif

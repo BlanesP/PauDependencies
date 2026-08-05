@@ -15,6 +15,9 @@ It solves a few specific problems:
 - **Safe overrides** — overrides are task-local, so they're isolated per test and safe under
   parallel execution and strict concurrency (no shared mutable state to reset).
 - **Context-aware defaults** — dependencies resolve differently in `live`, `test`, and `preview`.
+- **Modularization** — a module can *declare* a dependency and use it without importing the module
+  that *implements* it; the app links the implementation. Feature modules stay decoupled from concrete
+  implementations, and from each other.
 - **Test safety net** — using a real `liveValue` in a test is reported as a failure unless you
   opt in, so you never hit the network by accident.
 - **First-class testing** — integrations for both [Swift Testing](https://developer.apple.com/documentation/testing) and [Quick](https://github.com/Quick/Quick).
@@ -58,6 +61,42 @@ explicit type and a default value — the default becomes the key's `liveValue`.
 The macro is behind a package **trait**, so `swift-syntax` is only pulled in if you ask for it. See
 [Macro support](#macro-support-optional) below to enable it.
 
+## Modularization: declaring a dependency across modules
+
+Declare a dependency in one module and implement it in another, so feature modules use it without
+importing the implementation.
+
+**Interface module** — declare it with `@DependencyDeclaration` (like `@DependencyEntry`, but with no
+live value). It generates a public `ImageLoaderKey` from the property name:
+
+```swift
+public extension DependencyValues {
+    @DependencyDeclaration var imageLoader: ImageLoader
+}
+```
+
+**App** — in the composition root, `import` the implementation module and register the `liveValue` by
+conforming the generated key. Referencing it here is what links it into the binary:
+
+```swift
+import ImageLoaderLive
+import ImageLoaderInterface
+
+extension ImageLoaderKey: @retroactive DependencyKey {
+    public static var liveValue: ImageLoader { LiveImageLoader() }
+}
+```
+
+**Consumer** — imports the interface only:
+
+```swift
+import ImageLoaderInterface
+
+struct Avatar {
+    @Dependency(\.imageLoader) var imageLoader
+}
+```
+
 ## Using a dependency
 
 Read it anywhere with `@Dependency`. Resolution is lazy, so overrides are always reflected:
@@ -95,6 +134,10 @@ Each dependency resolves against a `DependencyContext`, detected automatically:
 | `.live` | `liveValue` | production |
 | `.test` | `liveValue`, but reports an issue if not overridden | running tests |
 | `.preview` | `previewValue` | Xcode previews |
+
+For a dependency declared via [`DependencyDeclarationKey`](#modularization-declaring-a-dependency-across-modules)
+with no implementation linked, `.live`/`.test` fall back to `declarationValue` and `.preview` resolves
+to `previewValue` (which defaults to `declarationValue`).
 
 You can override the context like any other value:
 

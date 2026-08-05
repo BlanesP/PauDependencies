@@ -1,5 +1,5 @@
 //
-//  DependencyEntryMacro.swift
+//  DependencyDeclarationMacro.swift
 //  PauDependencies
 //
 //  Created by Pau Blanes on 30/07/2026.
@@ -11,10 +11,10 @@ import SwiftSyntax
 import SwiftSyntaxMacros
 import SwiftDiagnostics
 
-public struct DependencyEntryMacro {
+public struct DependencyDeclarationMacro {
 }
 
-extension DependencyEntryMacro: AccessorMacro {
+extension DependencyDeclarationMacro: AccessorMacro {
     public static func expansion(
         of node: SwiftSyntax.AttributeSyntax,
         providingAccessorsOf declaration: some SwiftSyntax.DeclSyntaxProtocol,
@@ -30,7 +30,7 @@ extension DependencyEntryMacro: AccessorMacro {
                 Diagnostic(
                     node: binding,
                     message: MacroExpansionErrorMessage(
-                        "@DependencyEntry requires an explicit type, e.g. `var service: Service = ServiceImpl()`."
+                        "@DependencyDeclaration requires an explicit type, e.g. `var service: Service`."
                     )
                 )
             )
@@ -50,7 +50,7 @@ extension DependencyEntryMacro: AccessorMacro {
     }
 }
 
-extension DependencyEntryMacro: PeerMacro {
+extension DependencyDeclarationMacro: PeerMacro {
     public static func expansion(
         of node: SwiftSyntax.AttributeSyntax,
         providingPeersOf declaration: some SwiftSyntax.DeclSyntaxProtocol,
@@ -66,19 +66,7 @@ extension DependencyEntryMacro: PeerMacro {
                 Diagnostic(
                     node: binding,
                     message: MacroExpansionErrorMessage(
-                        "@DependencyEntry requires an explicit type, e.g. `var service: Service = ServiceImpl()`."
-                    )
-                )
-            )
-            return []
-        }
-        
-        guard let value = binding.initializer?.value else {
-            context.diagnose(
-                Diagnostic(
-                    node: binding,
-                    message: MacroExpansionErrorMessage(
-                        "@DependencyEntry requires a default value, e.g. `= ServiceImpl()`."
+                        "@DependencyDeclaration requires an explicit type, e.g. `var service: Service`."
                     )
                 )
             )
@@ -89,8 +77,8 @@ extension DependencyEntryMacro: PeerMacro {
 
         return [
             """
-            enum \(raw: keyName): DependencyKey {
-                static let liveValue: \(raw: typeName) = \(value)
+            public enum \(raw: keyName): DependencyDeclarationKey {
+                public static var declarationValue: \(raw: typeName) { fatalError("No live implementation linked for \(raw: typeName)") }
             }
             """
         ]

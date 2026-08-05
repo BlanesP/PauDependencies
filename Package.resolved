@@ -1,5 +1,5 @@
 {
-  "originHash" : "c57a94a4bebe5ba50bf569e01ae0fdfe158d60eb77cfad0e3853b525fdc922f8",
+  "originHash" : "c26194571c20cbe773d18397e87065a0299042f8e19996c836e92c9ff3e8853e",
   "pins" : [
     {
       "identity" : "cwlcatchexception",
@@ -62,6 +62,15 @@
       "state" : {
         "revision" : "0c0290ff6b24942dadb83a929ffaaa1481df04a2",
         "version" : "1.1.1"
+      }
+    },
+    {
+      "identity" : "swift-syntax",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swiftlang/swift-syntax.git",
+      "state" : {
+        "revision" : "79e4b74a295b6eb74a8b585e3a39d29e70c1dbd1",
+        "version" : "603.0.2"
       }
     },
     {
